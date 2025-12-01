@@ -1,0 +1,537 @@
+{
+  "name": "AGENTE WEB GITHUB",
+  "nodes": [
+    {
+      "parameters": {
+        "jsCode": "// Este Function node recibe items que contienen en item.json.output\n// con la cadena que queremos limpiar y escapar.\n\nreturn items.map(item => {\n  const originalText = item.json.output;\n\n  // 1. Limpiezas iniciales:\n  let cleaned = originalText\n    // Quitar etiquetas HTML\n    .replace(/<[^>]+>/g, '')\n    // Saltos de línea a espacio\n    .replace(/\\r?\\n|\\r/g, ' ')\n    // Tabs a espacio\n    .replace(/\\t+/g, ' ');\n    // Mantener sólo letras, números, signos básicos y espacios\n\n  return { json: { cleaned } };\n});\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1520,
+        80
+      ],
+      "id": "5fb36a14-875d-4856-b209-e8cff7539c21",
+      "name": "LIMPIAR SALIDA"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.cleaned }}",
+        "messages": {
+          "messageValues": [
+            {
+              "message": "=Tu objetivo consiste en formatear un mensaje markdown en un formato más bonito para un usuario. Elimina todos los caracteres típicos del lenguaje markdown y adapta la respuesta a un chat.\n\nEn tu salida jamás digas que has adaptado el texto a un formato para chat. Simplemente devuelve la misma información pero en el formato especificado.\n"
+            }
+          ]
+        },
+        "batching": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.7,
+      "position": [
+        1792,
+        80
+      ],
+      "id": "e0405e6a-25bb-48b5-b170-3a9d8f4e1293",
+      "name": "Basic LLM Chain"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4.1-mini"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        1792,
+        272
+      ],
+      "id": "194ad73f-cbe2-43c0-829b-1e25bad0b97e",
+      "name": "OpenAI Chat Model1"
+    },
+    {
+      "parameters": {
+        "content": "MENSAJE DE ENTRADA",
+        "height": 224,
+        "width": 400
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -352,
+        48
+      ],
+      "id": "cdc70c61-f9d4-4b88-a417-5bcbf38c7ea8",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "content": "AGENTE",
+        "height": 544,
+        "width": 1408,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        16,
+        -16
+      ],
+      "id": "f6ec4e6d-8017-4006-88ca-a4b1d46eccc4",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "content": "VERIFICAR RESPUESTA",
+        "height": 400,
+        "width": 656,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        1456,
+        16
+      ],
+      "id": "17279d9e-3b91-4708-a309-e90399386f08",
+      "name": "Sticky Note2"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "f953f649-353f-4922-9019-80c4e29563e7",
+              "name": "message",
+              "value": "={{ $json.text }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        2208,
+        80
+      ],
+      "id": "a95fbdda-0d33-44ff-bf27-b075f0448aa0",
+      "name": "RESPUESTA"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Entrada: {{ $json.content }}",
+        "needsFallback": true,
+        "options": {
+          "systemMessage": "=#Rol y Objetivo\n-Eres un asistente profesional de atención al público para los clientes, experto en inteligencia artificial especializado en automatización de procesos, atención personalizada y soluciones a medida para procesos internos. Siempre te comunicas en español de España y prestas servicio exclusivamente en Sevilla y su provincia. Tu principal función es conversar con personas vía mensajes de la página web para solucionar dudas acerca de los servicios ofrecidos de forma breve.\n-Tu objetivo principal es informar brevemente sobre los servicios y agendar citas para una llamada telefónica en la que resuelva sus dudas. Responde únicamente a las preguntas planteadas, evita opinar o añadir información innecesaria y mantén las respuestas breves.\n\n---\n\n## Presentación Única (añadido):\n**Comienza siempre la primera interacción con una única presentación clara y directa, indicando lo siguiente, solo una vez por usuario:**\n> \"Hola, soy el agente virtual. ¿En qué puedo ayudarte?\"\n\nNo repitas esta presentación en la misma conversación. Si el usuario cambia de tema o vuelve más tarde, no repitas la presentación salvo que sea un nuevo usuario o una nueva conversación completamente diferente.\n\n---\n\n#Instrucciones Generales\n\nSi la consulta está relacionada con los servicios, ofrece programar una reunión para tratar el caso particularmente; solicita únicamente estos datos si no han sido proporcionados:\n\nNombre y apellidos  \nDirección de correo electrónico  \nNúmero de teléfono  \nServicio requerido  \n\nUna vez dispongas de toda la información, presenta los datos recopilados de forma listada y ordenada al usuario para solicitar su confirmación antes de proceder. Omite datos como el ID y fecha, estos son datos internos tuyos y no tienes que facilitarlos al usuario. Ejemplo de presentación:\n\nNombre y apellidos: [dato]  \nCorreo electrónico: [dato]  \nTeléfono: [dato]  \nServicio requerido: [dato]  \nFecha y hora de la cita: [dato]  \n\n---\n\n## Refuerzo — Secuencia para Agendar Cita (añadido):\n**Cuando el usuario confirme todos los datos para la cita, ejecuta SIEMPRE y en este orden las siguientes acciones, sin excepción:**\n\n1. Utiliza siempre MCP Calendario para **obtener los eventos existentes** en la fecha y hora solicitadas (usando la función Obtener eventos/Get All: event), y así comprobar si hay disponibilidad real.\n2. Si no existe ningún evento registrado en ese rango horario, utiliza MCP Calendario para crear el evento/cita.\n3. Utiliza MCP Correo para enviar un correo de confirmación al usuario, con la fecha, hora y enlace de la cita.\n4. Utiliza AddLEADS para registrar automáticamente el lead en la BASE DE LEADS, usando todos los datos proporcionados y como fecha y hora de alta.\n5. Si falta algún dato para el lead, solicítalo de forma puntual, sin pedir información ya proporcionada.\n6. Si cualquier paso falla (por ejemplo, ya existe un evento en el calendario para esa hora), pide una alternativa al usuario y repite el proceso desde el paso 1.\n\n**En ningún caso debes omitir alguno de estos pasos al agendar una cita.**\n\n---\n\nUna vez el usuario confirme los datos, utiliza la herramienta MCP Calendario para verificar que no existen eventos en conflicto en la fecha y hora solicitadas (usando la función Obtener eventos) antes de devolver los datos listados y pedir confirmación al usuario.  \nSi no existen eventos para esa franja horaria, utiliza la herramienta MCP Calendario para agendar la reunión en la fecha y hora solicitadas. Antes de gestionar la cita, define internamente el propósito y los datos mínimos necesarios, sin compartirlos con el usuario.  \n**Si existe algún evento en la fecha/hora solicitada, pide una alternativa al usuario y vuelve a intentarlo.**\nCuando la reunión esté agendada, valida en 1-2 líneas que la cita se ha programado correctamente y notifica la confirmación al usuario. Si la validación no es satisfactoria, realiza la corrección mínima necesaria y repite el procedimiento antes de continuar.  \nTras agendar la reunión, utiliza la herramienta MCP Correo para enviar un correo de confirmación al usuario con la fecha, hora y enlace de la cita. Este paso es siempre obligatorio.  \nRegistra el nuevo lead utilizando la herramienta AddLEADS con los datos proporcionados; solicita solo información faltante. Nunca pidas el ID ni la descripción. Utiliza la fecha y hora actual {{ $now }} para registrar el lead correctamente.  \nSi recibes los datos en distintas conversaciones, no repitas las preguntas por datos ya obtenidos; consulta tu Memory para verificar la información guardada.  \nDespués de cada uso de una herramienta o acción relevante, valida el resultado en 1-2 líneas y decide el siguiente paso. Si la validación no es satisfactoria, corrige y repite antes de avanzar.  \nPara operaciones de lectura rutinarias actúa automáticamente; para acciones destructivas requiere confirmación explícita.  \nUsa solo las herramientas listadas en Herramientas Disponibles; ante tareas que requieran una herramienta no permitida, comunícalo de forma clara y sugiere pasos alternativos si es posible.  \n\n#Procedimiento para Cambiar una Cita\nCuando un usuario solicite cambiar una cita existente, sigue estos pasos:\n\nSi el usuario solicita cambiar una cita, indícale que para no crear conflictos debe eliminar primero la existente.  \nAntes de solicitar la eliminación, **utiliza tu herramienta MEMORY para obtener los eventos existentes usando como filtros**:\n- La franja de fecha y hora exacta de la cita.\n- El correo del organizador del evento.\n- (Opcional, si está disponible) El asunto/resumen del evento.\n\nRecupera el Event ID, la fecha y la hora del evento encontrado. Muestra estos datos al usuario para que confirme la eliminación.  \nCuando el usuario confirme, **accede a tu herramienta MCP Calendario y elimina el evento utilizando todos los datos obtenidos**.  \nUna vez eliminado, solicita al usuario los cambios y los datos que no contengas en tu MEMORI y utiliza el proceso habitual para crear una reunión.\n\n#Herramientas Disponibles\n\n-Conocimiento: Consulta información sobre los servicios y resuelve dudas de los usuarios.  \n-MCP Calendario: Gestiona la agenda de citas; **comprueba la disponibilidad obteniendo los eventos existentes en la franja horaria solicitada y solo permite crear una nueva cita si no existe ningún evento en ese rango**. Actualiza o elimina eventos identificándolos por fecha.  \n-MCP Correo: Tras agendar o modificar una cita, envía la confirmación al usuario con fecha, hora y enlace.  \n-Think: Razonamiento interno para ofrecer respuestas de calidad.  \n-Calculator: Para operaciones aritméticas.  \n-AddLEADS: Registra nuevos leads automáticamente tras confirmar una cita con MCP Calendario usando todos los datos disponibles; nunca menciones esta herramienta al usuario. Si falta información, dedúcela del historial o pregunta solo lo estrictamente necesario antes de guardar.  \n\n#Comportamiento y Restricciones\n\nMantén siempre un tono alegre, simpático y profesional.  \nSé educado en todas tus respuestas.  \nNo respondas a temas fuera de tus funciones.  \nOfrece citas solo en los siguientes horarios. Si el usuario propone una franja diferente, comunica los periodos disponibles:\n\nLunes a viernes, de 10:00 a 14:00 y de 15:00 a 19:00.\n\n#Ten presente:\n\nLa fecha y hora actual es: {{ $now }} .  \nSiempre **comprueba la disponibilidad obteniendo los eventos existentes en la franja horaria antes de crear una cita**, es muy importante no crear una cita si previamente había otra cita en esa hora concreta.  \nSugiere siempre la llamada telefónica como formato de cita.  \nNo inventes datos; solicita aclaración si falta información.  \nNunca respondas “no encontré ninguna cita” sin antes acceder a tu herramienta MCP Calendario y obtener el evento con todos los datos de la cita, incluido ID.  \nUtiliza la MEMORIA para evitar requerir datos ya proporcionados.  \nNunca menciones el uso de una herramienta. Utilízalas de manera interna, sin informarlo al usuario.  \nLimítate a responder consultas recibidas, sin opinar ni expandirte.  \nNunca solicites un identificador para cancelar reuniones; identifica la cita tú mismo.  \nResponde siempre con una única respuesta por consulta.  \nAntes de usar cualquier herramienta, define internamente el propósito y los datos mínimos requeridos.\n\nAnte cualquier acción destructiva o irreversible, solicita siempre confirmación explícita antes de proceder para garantizar la seguridad de los datos y del usuario.\n\n#Información Adicional\n\nUbicación: Dirección física genérica en Sevilla (sin datos sensibles).  \nHorario de atención: Lunes a viernes, de 10:00 a 14:00 y de 15:00 a 19:00.  \nPosibilidad de cita presencial.\n"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [
+        432,
+        96
+      ],
+      "id": "ceed3561-09e0-488e-b226-b1da87b98a79",
+      "name": "AI Agent1"
+    },
+    {
+      "parameters": {
+        "options": {
+          "temperature": 0.1,
+          "topP": 0.9
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        208,
+        304
+      ],
+      "id": "b6319b47-e2e9-418c-9aac-3852116bb5fa",
+      "name": "Google Gemini Chat Model"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Este Function node recibe items que contienen en item.json.output\n// con la cadena que queremos limpiar y escapar.\n\nreturn items.map(item => {\n    const originalText = item.json.output;\n\n    // 1. Limpiezas iniciales:\n    let cleaned = originalText\n        // Quitar etiquetas HTML\n        .replace(/<[^>]+>/g, '')\n        // Saltos de línea a espacio\n        .replace(/\\r?\\n|\\r/g, ' ')\n        // Tabs a espacio\n        .replace(/\\t+/g, ' ')\n        // Mantener sólo letras, números, signos básicos y espacios\n        .replace(/[^\\p{L}\\p{N}.:;?!()\"\\s]/gu, '')\n        // Normalizar múltiples espacios\n        .replace(/\\s+/g, ' ')\n        // Quitar espacios al inicio y al final\n        .trim();\n\n    // 2. Escapado para JSON: primero barras invertidas, luego comillas y control chars\n    cleaned = cleaned\n        .replace(/\\\\/g, '\\\\\\\\') // escapamos backslashes\n        .replace(/\"/g, '\\\\\"')   // escapamos comillas dobles\n        .replace(/\\r/g, '\\\\r')  // escapamos carriage returns\n        .replace(/\\n/g, '\\\\n')  // escapamos newlines\n        .replace(/\\t/g, '\\\\t'); // escapamos tabs\n\n    return {\n        output: cleaned\n    };\n});\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1072,
+        80
+      ],
+      "id": "5d9e3e01-9249-49fb-9e4e-9690b945bba0",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "8e52dfd2-d6e0-453a-b4e0-05b689152cec",
+              "name": "output",
+              "value": "={{ $json.output }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1296,
+        80
+      ],
+      "id": "cf089c5f-b45d-4a9d-a3f6-b04718298ed4",
+      "name": "SALIDA AGENTE"
+    },
+    {
+      "parameters": {
+        "authentication": "serviceAccount",
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Document', ``, 'string') }}",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Sheet', ``, 'string') }}",
+          "mode": "id"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheetsTool",
+      "typeVersion": 4.5,
+      "position": [
+        992,
+        304
+      ],
+      "id": "6c857070-875d-4d7b-bda8-5ed654a1333e",
+      "name": "AddLEADS"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-4.1",
+          "mode": "list",
+          "cachedResultName": "gpt-4.1"
+        },
+        "options": {
+          "frequencyPenalty": 0,
+          "presencePenalty": 0,
+          "temperature": 0.1,
+          "topP": 0.9
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        80,
+        304
+      ],
+      "id": "0753f3b8-8f95-49be-80ff-ec132e901b9b",
+      "name": "OpenAI Chat Model4"
+    },
+    {
+      "parameters": {},
+      "type": "@n8n/n8n-nodes-langchain.toolCalculator",
+      "typeVersion": 1,
+      "position": [
+        480,
+        304
+      ],
+      "id": "27ecfd24-542d-43a6-b87c-9ec6c31ac33d",
+      "name": "Calculator1"
+    },
+    {
+      "parameters": {},
+      "type": "@n8n/n8n-nodes-langchain.toolThink",
+      "typeVersion": 1.1,
+      "position": [
+        608,
+        304
+      ],
+      "id": "4c540858-5129-4612-8fab-2143dc61ed64",
+      "name": "Think1"
+    },
+    {
+      "parameters": {
+        "endpointUrl": "XXXXX",
+        "serverTransport": "httpStreamable",
+        "authentication": "headerAuth",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.mcpClientTool",
+      "typeVersion": 1.1,
+      "position": [
+        736,
+        304
+      ],
+      "id": "2f29db12-ba5f-415e-9f2c-3b0067ce599f",
+      "name": "MCP Calendario1"
+    },
+    {
+      "parameters": {
+        "endpointUrl": "XXXXX",
+        "serverTransport": "httpStreamable",
+        "authentication": "headerAuth",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.mcpClientTool",
+      "typeVersion": 1.1,
+      "position": [
+        864,
+        304
+      ],
+      "id": "c546679f-d653-43f0-9b70-00f2382b328c",
+      "name": "MCP Correo1"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "5a5df069-a6eb-446b-bd34-98f895ec0102",
+              "name": "content",
+              "value": "={{ $json.chatInput }}",
+              "type": "string"
+            },
+            {
+              "id": "6551eae5-1362-4871-b9f6-be34a2c29a96",
+              "name": "chatId",
+              "value": "={{ $json.sessionId }}",
+              "type": "string"
+            },
+            {
+              "id": "c17ffd8a-7b86-4595-8bb7-e540b55b27c5",
+              "name": "messageId",
+              "value": "={{ $json.chatInput }}",
+              "type": "string"
+            },
+            {
+              "id": "c1838198-f9b7-40d4-b407-1e95096fedfc",
+              "name": "sessionId",
+              "value": "={{ $json.sessionId }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        144,
+        96
+      ],
+      "id": "23e917d6-b0ed-41e8-a1d1-f81eef3083e0",
+      "name": "Entrada agente"
+    },
+    {
+      "parameters": {
+        "contextWindowLength": 10
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryRedisChat",
+      "typeVersion": 1.5,
+      "position": [
+        336,
+        368
+      ],
+      "id": "f390c29f-cf42-4a7b-9cd1-e06e42f3c65a",
+      "name": "Redis Chat Memory"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "OpenAI Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "LIMPIAR SALIDA": {
+      "main": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent1": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "ai_languageModel",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "SALIDA AGENTE",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AddLEADS": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model4": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Calculator1": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Think1": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "MCP Calendario1": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "MCP Correo1": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Entrada agente": {
+      "main": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Redis Chat Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "SALIDA AGENTE": {
+      "main": [
+        [
+          {
+            "node": "LIMPIAR SALIDA",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "358de831-12a6-4d42-bdbe-6f1e3a4973e7",
+  "meta": {
+    "instanceId": "7fb708d5791e437227c9350db89b34fa01fea4dade6f4f5586eca735aa99ad46"
+  },
+  "id": "gkfQaULS42B3UzZu",
+  "tags": [
+    {
+      "updatedAt": "2025-11-18T12:40:34.513Z",
+      "createdAt": "2025-11-18T12:40:34.513Z",
+      "id": "S2kBqqsVP5fFagDn",
+      "name": "git hub"
+    }
+  ]
+}

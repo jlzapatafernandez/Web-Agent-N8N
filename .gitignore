@@ -1,0 +1,179 @@
+# ==============================================
+# WEB AGENT N8N - Git Ignore
+# ==============================================
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+.env.production
+.env.development
+
+# n8n specific
+.n8n/
+n8n-data/
+
+# Node.js
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# Build outputs
+dist/
+build/
+.output/
+.nuxt/
+.next/
+out/
+
+# Logs
+logs/
+*.log
+*.log.*
+
+# Runtime data
+pids/
+*.pid
+*.seed
+*.pid.lock
+
+# Testing
+coverage/
+*.lcov
+.nyc_output/
+.jest/
+
+# Dependency directories
+node_modules/
+jspm_packages/
+bower_components/
+
+# Package manager
+.npm
+.yarn/cache
+.yarn/unplugged
+.yarn/build-state.yml
+.yarn/install-state.gz
+.pnp.*
+.yarn-integrity
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# Optional caches
+.eslintcache
+.stylelintcache
+.parcel-cache
+
+# Optional REPL history
+.node_repl_history
+
+# Output of 'npm pack'
+*.tgz
+
+# Docker
+docker-compose.override.yml
+*.env.backup
+Dockerfile.local
+
+# Redis
+dump.rdb
+appendonly.aof
+
+# IDE and Editors
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+*.sublime-*
+.project
+.settings/
+
+# OS Files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+Desktop.ini
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+*.temp
+
+# Backup files
+*.bak
+*.backup
+backup/
+backups/
+
+# Certificates and Keys
+*.pem
+*.key
+*.crt
+*.cer
+*.p12
+certificates/
+ssl/
+
+# Credentials and Secrets
+credentials.json
+token.json
+service-account.json
+service-account-*.json
+google-credentials.json
+*-credentials.json
+secrets.json
+config.local.json
+
+# n8n Credentials (sensitive)
+n8n-credentials.json
+
+# Uploaded files (if storing locally)
+uploads/
+user-uploads/
+
+# Static generated files
+public/generated/
+static/generated/
+
+# Database files (if using SQLite locally)
+*.sqlite
+*.sqlite3
+*.db
+
+# Cache directories
+.cache/
+.temp/
+cache/
+
+# Workflow exports with credentials (use clean versions only)
+*-with-credentials.json
+
+# Local development
+.local/
+local/
+
+# Documentation builds
+docs/build/
+site/
+
+# Monitoring and analytics
+.monitoring/
+analytics/
+
+# Screenshots (keep examples/ directory)
+screenshots/*.png
+!screenshots/example-*.png
+
+# Custom ignores
+custom/
+private/
